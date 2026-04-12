@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1a1a1a;
+  color: #e5e5e5;
+  -webkit-user-select: none;
+  padding: 24px 32px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.period-btns { display: flex; gap: 8px; margin-bottom: 20px; }
+.period-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #222;
+  color: #999;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.period-btn.selected { border-color: #4ade80; color: #4ade80; background: #1a2a1a; }
+.period-btn:hover { border-color: #555; }
+
+.preview-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+.preview-container {
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.refresh-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #444;
+  background: rgba(26,26,26,0.8);
+  color: #4ade80;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.refresh-btn:hover { background: rgba(40,40,40,0.9); border-color: #4ade80; }
+.preview-loading {
+  font-size: 12px;
+  color: #555;
+  padding: 30px 0;
+}
+.preview-container img {
+  max-width: 100%;
+  max-height: 340px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.share-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.share-dest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #222;
+  color: #e5e5e5;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.share-dest:hover { border-color: #555; background: #2a2a2a; }
+.share-dest .icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.share-dest .icon.twitter { background: #000; color: #fff; }
+.share-dest .icon.linkedin { background: #0a66c2; color: #fff; }
+.share-dest .icon.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+.share-dest .icon.reddit { background: #FF4500; color: #fff; }
+.share-dest .icon.clipboard { background: #4ade80; color: #1a1a1a; }
+.share-dest .icon.more { background: #555; color: #fff; }
+.share-dest .icon.save { background: #555; color: #fff; }
+
+.share-dest.full-width { grid-column: 1 / -1; }
+.share-dest.copied { border-color: #4ade80; }
+.share-dest.copied .icon.clipboard { background: #333; color: #4ade80; }
+
+.toast {
+  display: none;
+  background: #1a2a1a;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.toast.visible { display: block; }
+
+.hint {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.4;
+}
+</style>
+</head>
+<body>
+
+<div class="title">Share your stats</div>
+
+<div class="period-btns">
+  <button class="period-btn" id="dayBtn" onclick="setPeriod('today')">Today</button>
+  <button class="period-btn selected" id="weekBtn" onclick="setPeriod('week')">This Week</button>
+</div>
+
+<div class="preview-wrapper">
+  <div class="preview-container" id="previewContainer">
+    <div class="preview-loading" id="previewLoading">Generating preview...</div>
+    <img id="previewImg" style="display:none;" />
+  </div>
+  <button class="refresh-btn" onclick="refreshCard()" title="New tagline">&#x21BB;</button>
+</div>
+
+<div class="toast" id="toast">&#x2713; Image copied to clipboard! Opening browser...</div>
+
+<div class="share-grid">
+  <button class="share-dest" onclick="shareTo('twitter')">
+    <span class="icon twitter">&#x1D54F;</span>
+    Twitter / X
+  </button>
+  <button class="share-dest" onclick="shareTo('linkedin')">
+    <span class="icon linkedin">in</span>
+    LinkedIn
+  </button>
+  <button class="share-dest" onclick="shareTo('instagram')">
+    <span class="icon instagram">&#x1F4F7;</span>
+    Instagram
+  </button>
+  <button class="share-dest" onclick="shareTo('reddit')">
+    <span class="icon reddit">&#x25B2;</span>
+    Reddit
+  </button>
+  <button class="share-dest full-width" id="copyBtn" onclick="copyImage()">
+    <span class="icon clipboard">&#x2398;</span>
+    Copy Image to Clipboard
+  </button>
+  <button class="share-dest full-width" onclick="moreSharing()">
+    <span class="icon more">•••</span>
+    More Sharing Options...
+  </button>
+  <button class="share-dest full-width" onclick="savePNG()">
+    <span class="icon save">&#x21E9;</span>
+    Save as PNG
+  </button>
+</div>
+
+<div class="hint">Image is copied to clipboard first. Press Cmd+V to paste it in your post!</div>
+
+<script>
+let currentPeriod = 'week';
+let dashData = null;
+
+window.setSharePreview = function(dataURL) {
+  document.getElementById('previewLoading').style.display = 'none';
+  const img = document.getElementById('previewImg');
+  img.src = dataURL;
+  img.style.display = 'block';
+};
+
+window.updateShareData = function(jsonString) {
+  try {
+    dashData = JSON.parse(jsonString);
+  } catch(e) {}
+};
+
+function setPeriod(p) {
+  currentPeriod = p;
+  document.getElementById('dayBtn').classList.toggle('selected', p === 'today');
+  document.getElementById('weekBtn').classList.toggle('selected', p === 'week');
+  // Re-render preview
+  document.getElementById('previewLoading').style.display = 'block';
+  document.getElementById('previewImg').style.display = 'none';
+  window.webkit.messageHandlers.share.postMessage({type: 'renderPreview', period: currentPeriod});
+}
+
+function getShareText() {
+  if (!dashData) return '';
+  const isWeekly = currentPeriod === 'week';
+  const total = formatDuration(isWeekly ? dashData.weekTotal : dashData.todayTotal);
+  const period = isWeekly ? 'this week' : 'today';
+  const prompts = isWeekly ? dashData.weekPrompts : dashData.todayPrompts;
+  return 'I spent ' + total + ' waiting for Claude Code ' + period + '. ' + prompts + ' prompts. How much time are you wasting? Claude is Thinking?';
+}
+
+function formatDuration(seconds) {
+  if (seconds < 60) return seconds + 's';
+  if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h + 'h ' + m + 'm';
+}
+
+let pendingURL = null;
+
+function shareTo(platform) {
+  const text = encodeURIComponent(getShareText());
+  let url = '';
+  switch(platform) {
+    case 'twitter':
+      url = 'https://twitter.com/intent/tweet?text=' + text;
+      break;
+    case 'linkedin':
+      url = 'https://www.linkedin.com/feed/?shareActive=true';
+      break;
+    case 'instagram':
+      url = 'https://www.instagram.com/';
+      break;
+    case 'reddit':
+      url = 'https://www.reddit.com/submit?title=' + text;
+      break;
+  }
+  pendingURL = url;
+  // First copy image, then Swift calls back imageCopied()
+  window.webkit.messageHandlers.share.postMessage({type: 'copyForShare', period: currentPeriod});
+}
+
+window.imageCopied = function() {
+  // Show toast
+  const toast = document.getElementById('toast');
+  toast.classList.add('visible');
+  // Open URL after a brief delay so user sees the confirmation
+  setTimeout(function() {
+    if (pendingURL) {
+      window.webkit.messageHandlers.share.postMessage({type: 'openURL', url: pendingURL});
+      pendingURL = null;
+    }
+    // Hide toast after another moment
+    setTimeout(function() { toast.classList.remove('visible'); }, 2000);
+  }, 1200);
+};
+
+function copyImage() {
+  window.webkit.messageHandlers.share.postMessage({type: 'copyToClipboard', period: currentPeriod});
+  const btn = document.getElementById('copyBtn');
+  btn.classList.add('copied');
+  btn.querySelector('.icon').innerHTML = '&#x2713;';
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.querySelector('.icon').innerHTML = '&#x2398;';
+  }, 2000);
+}
+
+function refreshCard() {
+  document.getElementById('previewLoading').style.display = 'block';
+  document.getElementById('previewImg').style.display = 'none';
+  window.webkit.messageHandlers.share.postMessage({type: 'renderPreview', period: currentPeriod});
+}
+
+function moreSharing() {
+  window.webkit.messageHandlers.share.postMessage({type: 'shareMenu', period: currentPeriod});
+}
+
+function savePNG() {
+  window.webkit.messageHandlers.share.postMessage({type: 'savePNG', period: currentPeriod});
+}
+
+// Request initial preview render once the page loads
+window.addEventListener('load', function() {
+  window.webkit.messageHandlers.share.postMessage({type: 'renderPreview', period: currentPeriod});
+});
+</script>
+</body>
+</html>

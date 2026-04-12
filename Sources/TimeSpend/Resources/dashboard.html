@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude is Thinking?</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'SF Mono', 'Menlo', monospace;
+    background: #1a1a1a;
+    color: #e5e5e5;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  .container { padding: 16px; max-height: 640px; overflow: hidden; }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .app-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e5e5e5;
+  }
+  .settings-gear {
+    font-size: 24px;
+    color: #777;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    line-height: 1;
+  }
+  .settings-gear:hover { color: #999; }
+
+  /* Error banner */
+  .error-banner {
+    background: #2a1a1a;
+    border: 1px solid #4a2a2a;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-bottom: 16px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .error-banner.visible { display: flex; }
+  .error-banner .msg { color: #f87171; }
+  .error-banner .fix-link { color: #4ade80; cursor: pointer; text-decoration: underline; background:none; border:none; font:inherit; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .hero-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    transition: color 0.2s;
+  }
+  .hero-number.active { color: #4ade80; }
+  .hero-label {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+  }
+  .hero-sublabel {
+    font-size: 11px;
+    color: #4ade80;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .hero-sublabel.idle { color: #777; }
+  .pulse-dot {
+    width: 6px; height: 6px;
+    background: #4ade80;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .pulse-dot.active { animation: pulse 1.5s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .hero-toggle-hint {
+    font-size: 10px;
+    color: #555;
+    margin-top: 4px;
+  }
+
+  /* Chart */
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .chart-title {
+    font-size: 10px;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .chart-total {
+    font-size: 11px;
+    color: #999;
+    font-weight: 600;
+  }
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 60px;
+    margin-bottom: 16px;
+    padding: 0 4px;
+    overflow: hidden;
+  }
+  .chart-bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+  .chart-bar {
+    width: 28px;
+    background: #333;
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .chart-bar.has-data { background: #444; }
+  .chart-bar.has-data:hover { background: #555; }
+  .chart-bar.today { background: #4ade80; }
+  .chart-bar.today:hover { background: #6ee7a0; }
+  .chart-label {
+    font-size: 10px;
+    color: #555;
+    margin-top: 4px;
+  }
+  .chart-tooltip {
+    position: absolute;
+    top: -24px;
+    background: #333;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: none;
+    z-index: 10;
+  }
+  .chart-bar-group:hover .chart-tooltip { display: block; }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-top: 1px solid #2a2a2a;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 16px;
+  }
+  .stat { text-align: center; flex: 1; }
+  .stat-value { font-size: 16px; font-weight: 600; color: #fff; }
+  .stat-label { font-size: 10px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .stat-period { font-size: 10px; color: #555; }
+
+  /* Sessions */
+  .sessions { margin-bottom: 16px; max-height: 130px; overflow: hidden; }
+  .sessions-header { font-size: 10px; color: #777; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .session-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 11px; }
+  .session-time { color: #555; }
+  .session-duration { color: #999; font-weight: 600; }
+  .session-duration.long { color: #f87171; }
+  .session-duration.active-session { color: #4ade80; }
+
+  /* Share button */
+  .share-btn {
+    width: 100%;
+    padding: 8px;
+    background: #4ade80;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .share-btn:hover { background: #6ee7a0; }
+  .share-btn:disabled { background: #333; color: #555; cursor: default; }
+  .share-btn.copied { background: #333; color: #4ade80; }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 10px;
+    color: #555;
+  }
+  .footer button {
+    color: #555;
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+  }
+  .footer button:hover { color: #999; }
+
+  /* Settings overlay */
+  .settings-overlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a1a;
+    z-index: 100;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .settings-overlay.visible { display: block; }
+  .settings-back {
+    font-size: 11px;
+    color: #4ade80;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font: inherit;
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+  .settings-title { font-size: 16px; color: #fff; font-weight: 600; margin-bottom: 16px; }
+  .setting-group { margin-bottom: 16px; }
+  .setting-group-label { font-size: 10px; color: #777; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+  .setting-name { font-size: 13px; color: #e5e5e5; }
+  .setting-desc { font-size: 10px; color: #555; margin-top: 4px; }
+  .toggle {
+    width: 36px; height: 20px;
+    background: #333;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .toggle.on { background: #4ade80; }
+  .toggle::after {
+    content: '';
+    width: 16px; height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: left 0.15s;
+  }
+  .toggle.on::after { left: 18px; }
+  .preset-btns { display: flex; gap: 4px; }
+  .preset-btn {
+    padding: 4px 8px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background: #222;
+    color: #777;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .preset-btn.selected { border-color: #4ade80; color: #4ade80; background: #1a2a1a; }
+  .danger-btn {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #4a2a2a;
+    border-radius: 8px;
+    background: transparent;
+    color: #f87171;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* First run */
+  .first-run {
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .first-run-icon { font-size: 40px; margin-bottom: 16px; }
+  .first-run h3 { font-size: 16px; color: #fff; margin-bottom: 8px; font-weight: 600; }
+  .first-run p { font-size: 11px; color: #999; line-height: 1.6; margin-bottom: 16px; }
+  .enable-btn {
+    width: 100%;
+    padding: 8px;
+    background: #4ade80;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .skip-link {
+    display: block;
+    margin-top: 8px;
+    font-size: 10px;
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font: inherit;
+  }
+
+  /* Empty state */
+  .empty-hint {
+    text-align: center;
+    padding: 16px 0;
+    color: #555;
+    font-size: 11px;
+    line-height: 1.6;
+    display: none;
+  }
+  .empty-hint.visible { display: block; }
+</style>
+</head>
+<body>
+<div class="container" style="position:relative;">
+
+  <!-- First Run Screen -->
+  <div class="first-run" id="firstRun">
+    <div class="first-run-icon">&#x1F331;</div>
+    <h3>Track your Claude Code wait time</h3>
+    <p>Claude is Thinking? measures how long you spend waiting for Claude Code to respond. One click to set up. Your data stays on your Mac.</p>
+    <button class="enable-btn" onclick="enableTracking()">Enable Tracking</button>
+    <button class="skip-link" onclick="showHowItWorks()">How does it work?</button>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div id="dashboard" style="display:none;">
+    <!-- Header -->
+    <div class="header">
+      <span class="app-name">Claude is Thinking?</span>
+      <button class="settings-gear" onclick="showSettings()">&#9881;</button>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner">
+      <span class="msg" id="errorMsg">Tracking paused. No events detected.</span>
+      <button class="fix-link" onclick="fixTracking()">Fix</button>
+    </div>
+
+    <!-- Hooks Not Installed Banner -->
+    <div class="error-banner" id="hooksNotInstalled" style="display:none; background:#1a2a1a; border-color:#2a4a2a;">
+      <span class="msg" style="color:#4ade80;">Hooks not installed. Tracking is off.</span>
+      <button class="fix-link" onclick="enableTracking()" style="color:#4ade80;">Install</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero" onclick="toggleHeroView()">
+      <div class="hero-number" id="heroNumber">0h 0m</div>
+      <div class="hero-label" id="heroLabel">waiting for Claude Code today</div>
+      <div class="hero-sublabel idle" id="heroSublabel">
+        <span class="pulse-dot" id="pulseDot"></span>
+        <span id="heroStatus">no sessions yet</span>
+      </div>
+      <div class="hero-toggle-hint" id="toggleHint">tap to show weekly total</div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-header">
+      <span class="chart-title">This Week</span>
+      <span class="chart-total" id="chartTotal">0h 0m total</span>
+    </div>
+    <div class="chart" id="chartContainer"></div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="statPrompts">--</div>
+        <div class="stat-label">Prompts</div>
+        <div class="stat-period" id="statPeriod1">today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statAvg">--</div>
+        <div class="stat-label">Avg Wait</div>
+        <div class="stat-period" id="statPeriod2">today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statLongest">--</div>
+        <div class="stat-label">Longest</div>
+        <div class="stat-period" id="statPeriod3">today</div>
+      </div>
+    </div>
+
+    <!-- Empty hint -->
+    <div class="empty-hint" id="emptyHint">
+      Send a prompt in Claude Code<br>and the timer will start automatically.
+    </div>
+
+    <!-- Sessions -->
+    <div class="sessions" id="sessionsContainer" style="display:none;">
+      <div class="sessions-header">Recent Sessions</div>
+      <div id="sessionsList"></div>
+    </div>
+
+    <!-- Share -->
+    <button class="share-btn" id="shareBtn" onclick="openShare()" disabled>Share Your Stats</button>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span id="versionLabel">v1.0.0</span>
+      <button onclick="quitApp()">Quit Claude is Thinking?</button>
+    </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <button class="settings-back" onclick="hideSettings()">&larr; Back</button>
+    <div class="settings-title">Settings</div>
+
+    <div class="setting-group">
+      <div class="setting-group-label">Touch Grass Reminders</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Break reminder</div>
+          <div class="setting-desc">Notify when daily wait time exceeds threshold</div>
+        </div>
+        <button class="toggle on" id="grassToggle" onclick="toggleGrass()"></button>
+      </div>
+      <div class="setting-row" id="thresholdRow">
+        <span class="setting-name" style="font-size:11px; color:#777;">Threshold</span>
+        <div class="preset-btns" id="thresholdBtns">
+          <button class="preset-btn" data-val="900" onclick="setThreshold(900)">15m</button>
+          <button class="preset-btn selected" data-val="1800" onclick="setThreshold(1800)">30m</button>
+          <button class="preset-btn" data-val="2700" onclick="setThreshold(2700)">45m</button>
+          <button class="preset-btn" data-val="3600" onclick="setThreshold(3600)">1h</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-label">General</div>
+      <div class="setting-row">
+        <div><div class="setting-name">Launch at login</div></div>
+        <button class="toggle on" id="loginToggle" onclick="toggleLogin()"></button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-label">Tracking</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Hooks installed</div>
+          <div class="setting-desc">Tracking Claude Code via ~/.claude/settings.json</div>
+        </div>
+        <span style="color:#4ade80; font-size:11px;" id="hookStatus">Active</span>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Data retention</div>
+          <div class="setting-desc">Sessions older than 90 days are deleted</div>
+        </div>
+        <span style="color:#777; font-size:11px;">90 days</span>
+      </div>
+    </div>
+
+    <button class="danger-btn" onclick="disableTracking()">Disable Tracking &amp; Remove Hooks</button>
+  </div>
+
+</div>
+
+<script>
+// State
+let currentView = 'today'; // 'today' or 'week'
+let dashboardData = null;
+let grassEnabled = true;
+let grassThreshold = 1800;
+
+// Swift bridge: called from Swift via evaluateJavaScript
+window.updateDashboard = function(jsonString) {
+  try {
+    dashboardData = JSON.parse(jsonString);
+    render();
+  } catch(e) {
+    console.error('Dashboard update failed:', e);
+  }
+};
+
+window.updateLiveTimer = function(seconds) {
+  if (!dashboardData) return;
+  dashboardData.activeElapsed = seconds;
+  dashboardData.isActive = true;
+  renderHero();
+};
+
+window.showFirstRun = function() {
+  document.getElementById('firstRun').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+};
+
+window.showDashboard = function() {
+  document.getElementById('firstRun').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+};
+
+window.updateSettings = function(jsonString) {
+  try {
+    const s = JSON.parse(jsonString);
+    if (s.grassThreshold !== undefined) {
+      grassThreshold = s.grassThreshold;
+      grassEnabled = grassThreshold > 0;
+      renderSettings();
+    }
+    if (s.launchAtLogin !== undefined) {
+      document.getElementById('loginToggle').classList.toggle('on', s.launchAtLogin);
+    }
+    if (s.hooksInstalled !== undefined) {
+      document.getElementById('hookStatus').textContent = s.hooksInstalled ? 'Active' : 'Not installed';
+      document.getElementById('hookStatus').style.color = s.hooksInstalled ? '#4ade80' : '#f87171';
+      // Show/hide the "hooks not installed" banner on dashboard
+      const banner = document.getElementById('hooksNotInstalled');
+      if (banner) banner.style.display = s.hooksInstalled ? 'none' : 'flex';
+    }
+  } catch(e) {}
+};
+
+// Render
+function render() {
+  if (!dashboardData) return;
+  window.showDashboard();
+
+  const hasData = dashboardData.todayPrompts > 0 || dashboardData.weekPrompts > 0;
+
+  renderHero();
+  renderChart();
+  renderStats();
+  renderSessions();
+
+  document.getElementById('emptyHint').classList.toggle('visible', !hasData && !dashboardData.isActive);
+  document.getElementById('shareBtn').disabled = !hasData;
+}
+
+function renderHero() {
+  const d = dashboardData;
+  const heroNum = document.getElementById('heroNumber');
+  const heroLabel = document.getElementById('heroLabel');
+  const heroSub = document.getElementById('heroSublabel');
+  const pulseDot = document.getElementById('pulseDot');
+  const heroStatus = document.getElementById('heroStatus');
+  const toggleHint = document.getElementById('toggleHint');
+
+  if (currentView === 'today') {
+    heroNum.textContent = formatDuration(d.todayTotal);
+    heroLabel.textContent = 'waiting for Claude Code today';
+    toggleHint.textContent = 'tap to show weekly total';
+  } else {
+    heroNum.textContent = formatDuration(d.weekTotal);
+    heroLabel.textContent = 'waiting for Claude Code this week';
+    toggleHint.textContent = 'tap to show today';
+  }
+
+  if (d.isActive) {
+    heroNum.classList.add('active');
+    heroSub.classList.remove('idle');
+    pulseDot.classList.add('active');
+    heroStatus.textContent = 'currently thinking... ' + formatTimer(d.activeElapsed);
+  } else {
+    heroNum.classList.remove('active');
+    heroSub.classList.add('idle');
+    pulseDot.classList.remove('active');
+    if (d.todayPrompts === 0 && d.weekPrompts === 0) {
+      heroStatus.textContent = 'no sessions yet';
+    } else if (currentView === 'today') {
+      heroStatus.textContent = 'idle, waiting for next prompt';
+    } else {
+      heroStatus.textContent = 'today: ' + formatDuration(d.todayTotal);
+    }
+  }
+}
+
+function renderChart() {
+  const container = document.getElementById('chartContainer');
+  const totalEl = document.getElementById('chartTotal');
+
+  const d = dashboardData;
+  totalEl.textContent = formatDuration(d.weekTotal) + ' total';
+
+  const maxSeconds = Math.max(...d.weeklyChart.map(x => x.seconds), 1);
+  container.innerHTML = '';
+
+  d.weeklyChart.forEach(day => {
+    const group = document.createElement('div');
+    group.className = 'chart-bar-group';
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'chart-tooltip';
+    tooltip.textContent = formatDuration(day.seconds);
+    group.appendChild(tooltip);
+
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    const height = Math.max(4, (day.seconds / maxSeconds) * 50);
+    bar.style.height = height + 'px';
+    if (day.isToday) bar.classList.add('today');
+    else if (day.seconds > 0) bar.classList.add('has-data');
+    group.appendChild(bar);
+
+    const label = document.createElement('span');
+    label.className = 'chart-label';
+    label.textContent = day.label;
+    group.appendChild(label);
+
+    container.appendChild(group);
+  });
+}
+
+function renderStats() {
+  const d = dashboardData;
+  const isToday = currentView === 'today';
+  const period = isToday ? 'today' : 'this week';
+
+  document.getElementById('statPrompts').textContent = isToday ? d.todayPrompts : d.weekPrompts;
+  document.getElementById('statAvg').textContent = formatShortDuration(isToday ? d.todayAvgWait : d.weekAvgWait);
+  document.getElementById('statLongest').textContent = formatShortDuration(isToday ? d.todayLongest : d.weekLongest);
+  document.getElementById('statPeriod1').textContent = period;
+  document.getElementById('statPeriod2').textContent = period;
+  document.getElementById('statPeriod3').textContent = period;
+
+  const noData = (isToday ? d.todayPrompts : d.weekPrompts) === 0;
+  if (noData) {
+    document.getElementById('statPrompts').textContent = '--';
+    document.getElementById('statAvg').textContent = '--';
+    document.getElementById('statLongest').textContent = '--';
+  }
+}
+
+function renderSessions() {
+  const d = dashboardData;
+  const container = document.getElementById('sessionsContainer');
+  const list = document.getElementById('sessionsList');
+
+  if (d.recentSessions.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  list.innerHTML = '';
+
+  d.recentSessions.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'session-row';
+
+    const time = document.createElement('span');
+    time.className = 'session-time';
+    time.textContent = s.time;
+
+    const dur = document.createElement('span');
+    dur.className = 'session-duration';
+    if (s.isActive) dur.classList.add('active-session');
+    else if (s.isLong) dur.classList.add('long');
+    dur.textContent = s.duration;
+
+    row.appendChild(time);
+    row.appendChild(dur);
+    list.appendChild(row);
+  });
+}
+
+function renderSettings() {
+  const toggle = document.getElementById('grassToggle');
+  toggle.classList.toggle('on', grassEnabled);
+  document.getElementById('thresholdRow').style.display = grassEnabled ? 'flex' : 'none';
+
+  document.querySelectorAll('#thresholdBtns .preset-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.val) === grassThreshold);
+  });
+}
+
+// Actions
+function toggleHeroView() {
+  currentView = currentView === 'today' ? 'week' : 'today';
+  renderHero();
+  renderStats();
+}
+
+function showSettings() {
+  window.webkit.messageHandlers.action.postMessage({type: 'openSettings'});
+}
+
+function hideSettings() {
+  document.getElementById('settingsOverlay').classList.remove('visible');
+}
+
+function openShare() {
+  window.webkit.messageHandlers.action.postMessage({type: 'openShare'});
+}
+
+function enableTracking() {
+  window.webkit.messageHandlers.action.postMessage({type: 'enableTracking'});
+}
+
+function disableTracking() {
+  window.webkit.messageHandlers.action.postMessage({type: 'disableTracking'});
+}
+
+function fixTracking() {
+  window.webkit.messageHandlers.action.postMessage({type: 'fixTracking'});
+}
+
+function toggleGrass() {
+  grassEnabled = !grassEnabled;
+  if (!grassEnabled) {
+    window.webkit.messageHandlers.action.postMessage({type: 'setSetting', key: 'grass_threshold', value: '0'});
+  } else {
+    window.webkit.messageHandlers.action.postMessage({type: 'setSetting', key: 'grass_threshold', value: String(grassThreshold)});
+  }
+  renderSettings();
+}
+
+function setThreshold(val) {
+  grassThreshold = val;
+  window.webkit.messageHandlers.action.postMessage({type: 'setSetting', key: 'grass_threshold', value: String(val)});
+  renderSettings();
+}
+
+function toggleLogin() {
+  const toggle = document.getElementById('loginToggle');
+  const newVal = !toggle.classList.contains('on');
+  toggle.classList.toggle('on', newVal);
+  window.webkit.messageHandlers.action.postMessage({type: 'setSetting', key: 'launch_at_login', value: String(newVal)});
+}
+
+function quitApp() {
+  window.webkit.messageHandlers.action.postMessage({type: 'quit'});
+}
+
+function showHowItWorks() {
+  window.webkit.messageHandlers.action.postMessage({type: 'howItWorks'});
+}
+
+// Formatters
+function formatDuration(seconds) {
+  if (seconds < 60) return '0m';
+  if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h + 'h ' + m + 'm';
+}
+
+function formatShortDuration(seconds) {
+  if (seconds < 60) return seconds + 's';
+  if (seconds < 3600) return Math.round(seconds / 60 * 10) / 10 + 'm';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h + 'h ' + m + 'm';
+}
+
+function formatTimer(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+</script>
+</body>
+</html>

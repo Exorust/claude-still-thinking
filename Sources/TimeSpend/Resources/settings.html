@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1a1a1a;
+  color: #e5e5e5;
+  -webkit-user-select: none;
+  padding: 32px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 32px;
+}
+
+.setting-group {
+  margin-bottom: 28px;
+}
+.setting-group-label {
+  font-size: 11px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-name {
+  font-size: 15px;
+  color: #e5e5e5;
+}
+.setting-desc {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.toggle {
+  width: 44px; height: 24px;
+  background: #333;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+.toggle.on { background: #4ade80; }
+.toggle::after {
+  content: '';
+  width: 20px; height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px; left: 2px;
+  transition: left 0.15s;
+}
+.toggle.on::after { left: 22px; }
+
+.preset-btns { display: flex; gap: 6px; }
+.preset-btn {
+  padding: 6px 14px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #222;
+  color: #777;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.preset-btn.selected { border-color: #4ade80; color: #4ade80; background: #1a2a1a; }
+.preset-btn:hover { border-color: #555; }
+
+.danger-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #4a2a2a;
+  border-radius: 8px;
+  background: transparent;
+  color: #f87171;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 16px;
+}
+.danger-btn:hover { background: #2a1a1a; }
+
+.status-badge {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.status-badge.active { color: #4ade80; background: #1a2a1a; }
+.status-badge.inactive { color: #f87171; background: #2a1a1a; }
+
+.version {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  margin-top: 24px;
+}
+</style>
+</head>
+<body>
+
+<div class="title">Settings</div>
+
+<div class="setting-group">
+  <div class="setting-group-label">Touch Grass Reminders</div>
+  <div class="setting-row">
+    <div>
+      <div class="setting-name">Break reminder</div>
+      <div class="setting-desc">Notify when daily wait time exceeds threshold</div>
+    </div>
+    <button class="toggle on" id="grassToggle" onclick="toggleGrass()"></button>
+  </div>
+  <div class="setting-row" id="thresholdRow">
+    <span class="setting-name" style="color:#777;">Threshold</span>
+    <div class="preset-btns" id="thresholdBtns">
+      <button class="preset-btn" data-val="900" onclick="setThreshold(900)">15m</button>
+      <button class="preset-btn selected" data-val="1800" onclick="setThreshold(1800)">30m</button>
+      <button class="preset-btn" data-val="2700" onclick="setThreshold(2700)">45m</button>
+      <button class="preset-btn" data-val="3600" onclick="setThreshold(3600)">1h</button>
+    </div>
+  </div>
+</div>
+
+<div class="setting-group">
+  <div class="setting-group-label">General</div>
+  <div class="setting-row">
+    <div><div class="setting-name">Launch at login</div></div>
+    <button class="toggle on" id="loginToggle" onclick="toggleLogin()"></button>
+  </div>
+</div>
+
+<div class="setting-group">
+  <div class="setting-group-label">Tracking</div>
+  <div class="setting-row">
+    <div>
+      <div class="setting-name">Hooks installed</div>
+      <div class="setting-desc">Tracking Claude Code via ~/.claude/settings.json</div>
+    </div>
+    <span class="status-badge active" id="hookStatus">Active</span>
+  </div>
+  <div class="setting-row">
+    <div>
+      <div class="setting-name">Data retention</div>
+      <div class="setting-desc">Sessions older than 90 days are automatically deleted</div>
+    </div>
+    <span style="color:#777; font-size:13px;">90 days</span>
+  </div>
+</div>
+
+<button class="danger-btn" onclick="disableTracking()">Disable Tracking &amp; Remove Hooks</button>
+
+<div class="version">Claude is Thinking? v1.0</div>
+
+<script>
+let grassEnabled = true;
+let grassThreshold = 1800;
+
+window.updateSettings = function(jsonString) {
+  try {
+    const s = JSON.parse(jsonString);
+    if (s.grassThreshold !== undefined) {
+      grassThreshold = s.grassThreshold;
+      grassEnabled = grassThreshold > 0;
+      renderSettings();
+    }
+    if (s.launchAtLogin !== undefined) {
+      document.getElementById('loginToggle').classList.toggle('on', s.launchAtLogin);
+    }
+    if (s.hooksInstalled !== undefined) {
+      const el = document.getElementById('hookStatus');
+      el.textContent = s.hooksInstalled ? 'Active' : 'Not installed';
+      el.className = 'status-badge ' + (s.hooksInstalled ? 'active' : 'inactive');
+    }
+  } catch(e) {}
+};
+
+function renderSettings() {
+  const toggle = document.getElementById('grassToggle');
+  toggle.classList.toggle('on', grassEnabled);
+  document.getElementById('thresholdRow').style.display = grassEnabled ? 'flex' : 'none';
+
+  document.querySelectorAll('#thresholdBtns .preset-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.val) === grassThreshold);
+  });
+}
+
+function toggleGrass() {
+  grassEnabled = !grassEnabled;
+  if (!grassEnabled) {
+    window.webkit.messageHandlers.settings.postMessage({type: 'setSetting', key: 'grass_threshold', value: '0'});
+  } else {
+    window.webkit.messageHandlers.settings.postMessage({type: 'setSetting', key: 'grass_threshold', value: String(grassThreshold)});
+  }
+  renderSettings();
+}
+
+function setThreshold(val) {
+  grassThreshold = val;
+  window.webkit.messageHandlers.settings.postMessage({type: 'setSetting', key: 'grass_threshold', value: String(val)});
+  renderSettings();
+}
+
+function toggleLogin() {
+  const toggle = document.getElementById('loginToggle');
+  const newVal = !toggle.classList.contains('on');
+  toggle.classList.toggle('on', newVal);
+  window.webkit.messageHandlers.settings.postMessage({type: 'setSetting', key: 'launch_at_login', value: String(newVal)});
+}
+
+function disableTracking() {
+  window.webkit.messageHandlers.settings.postMessage({type: 'disableTracking'});
+}
+</script>
+</body>
+</html>
