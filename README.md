@@ -10,7 +10,7 @@
 
 <br>
 
-<img width="380" alt="Dashboard" src="https://github.com/user-attachments/assets/81655fdf-b222-4365-b9b7-718135b889a4" />&nbsp;&nbsp;&nbsp;&nbsp;<img width="380" alt="Share Card" src="https://github.com/user-attachments/assets/8e8428d8-ef87-4975-bd72-6bcc9017b15d" />
+<img height="500" alt="Dashboard" src="https://github.com/user-attachments/assets/81655fdf-b222-4365-b9b7-718135b889a4" />&nbsp;&nbsp;&nbsp;&nbsp;<img height="500" alt="Share Card" src="https://github.com/user-attachments/assets/8e8428d8-ef87-4975-bd72-6bcc9017b15d" />
 
 </div>
 
