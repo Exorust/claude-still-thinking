@@ -65,6 +65,9 @@ jobs:
           </plist>
           PLIST
 
+      - name: Ad-hoc sign app bundle
+        run: codesign --force --deep -s - "Claude Still Thinking?.app"
+
       - name: Create DMG
         run: |
           hdiutil create -volname "Claude Still Thinking?" \

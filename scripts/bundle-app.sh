@@ -68,5 +68,8 @@ cat > "${CONTENTS}/Info.plist" << 'PLIST'
 </plist>
 PLIST
 
+# Ad-hoc sign the bundle (seals resources, prevents Gatekeeper "damaged" error)
+codesign --force --deep -s - "${APP_DIR}"
+
 echo "App bundle created at: ${APP_DIR}"
 echo "Run with: open ${APP_DIR}"
