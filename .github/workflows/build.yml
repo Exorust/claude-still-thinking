@@ -1,0 +1,78 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Assemble .app bundle
+        run: |
+          APP="Claude is Thinking?.app"
+          mkdir -p "$APP/Contents/MacOS"
+          mkdir -p "$APP/Contents/Resources"
+
+          # Copy binary
+          cp .build/release/TimeSpend "$APP/Contents/MacOS/TimeSpend"
+
+          # Copy SPM resource bundle
+          cp -R .build/release/TimeSpend_TimeSpend.bundle "$APP/Contents/Resources/"
+
+          # Write Info.plist
+          cat > "$APP/Contents/Info.plist" << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>TimeSpend</string>
+            <key>CFBundleIdentifier</key>
+            <string>dev.timespend.app</string>
+            <key>CFBundleName</key>
+            <string>Claude is Thinking?</string>
+            <key>CFBundleDisplayName</key>
+            <string>Claude is Thinking?</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>13.0</string>
+            <key>LSUIElement</key>
+            <true/>
+            <key>NSUserNotificationAlertStyle</key>
+            <string>alert</string>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "Claude is Thinking?" \
+            -srcfolder "Claude is Thinking?.app" \
+            -ov -format UDZO \
+            "Claude-is-Thinking.dmg"
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Claude-is-Thinking.dmg
+          path: Claude-is-Thinking.dmg
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Claude-is-Thinking.dmg
+          generate_release_notes: true
