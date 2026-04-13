@@ -230,7 +230,7 @@ function getShareText() {
   const total = formatDuration(isWeekly ? dashData.weekTotal : dashData.todayTotal);
   const period = isWeekly ? 'this week' : 'today';
   const prompts = isWeekly ? dashData.weekPrompts : dashData.todayPrompts;
-  return 'I spent ' + total + ' waiting for Claude Code ' + period + '. ' + prompts + ' prompts. How much time are you wasting? claudeisthinking.com';
+  return 'I spent ' + total + ' waiting for Claude Code ' + period + '. ' + prompts + ' prompts. How much time are you wasting? claude-is-thinking.vercel.app';
 }
 
 function formatDuration(seconds) {

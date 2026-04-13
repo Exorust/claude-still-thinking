@@ -317,6 +317,27 @@
   .share-btn:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: default; }
   .share-btn.copied { background: var(--bg-tertiary); color: var(--accent); }
 
+  /* Flip toggle button */
+  .flip-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--danger-border);
+    border-radius: 8px;
+    color: var(--danger);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.15s;
+  }
+  .flip-btn:hover { background: var(--danger-bg); }
+  .flip-btn.on {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .flip-btn.on:hover { background: var(--accent-bg); }
+
   /* Footer */
   .footer {
     display: flex;
@@ -501,13 +522,6 @@
       </button>
     </div>
 
-    <!-- Flip view toggle -->
-    <div style="text-align:center; margin-bottom:12px;">
-      <button id="flipBtn" onclick="toggleFlip()" style="background:none; border:none; font:inherit; font-size:10px; color:var(--text-muted); cursor:pointer; padding:4px 8px;">
-        This is too depressing. Show me the good stuff.
-      </button>
-    </div>
-
     <!-- Chart -->
     <div class="chart-header">
       <span class="chart-title">This Week</span>
@@ -547,6 +561,9 @@
 
     <!-- Share -->
     <button class="share-btn" id="shareBtn" onclick="openShare()" disabled>Share Your Stats</button>
+
+    <!-- Flip view toggle -->
+    <button class="flip-btn" id="flipBtn" onclick="toggleFlip()">This is too depressing. Show me the good stuff.</button>
 
     <!-- Footer -->
     <div class="footer">
@@ -886,7 +903,7 @@ function toggleFlip() {
   flipped = !flipped;
   const btn = document.getElementById('flipBtn');
   btn.textContent = flipped ? 'OK show me the damage.' : 'This is too depressing. Show me the good stuff.';
-  btn.style.color = flipped ? 'var(--accent)' : 'var(--text-muted)';
+  btn.classList.toggle('on', flipped);
   render();
 }
 
