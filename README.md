@@ -1,5 +1,9 @@
 # Claude is Thinking?
 
+<img width="405" height="660" alt="image" src="https://github.com/user-attachments/assets/81655fdf-b222-4365-b9b7-718135b889a4" /> <img width="400" height="500" alt="image" src="https://github.com/user-attachments/assets/8e8428d8-ef87-4975-bd72-6bcc9017b15d" />
+
+
+
 **You know that feeling.** You hit enter on a prompt, Claude starts "thinking," and suddenly you're reorganizing your desk drawer, making coffee, questioning your career choices, and wondering if the AI is writing a novel in there.
 
 This app measures exactly how much of your life you've donated to that blinking cursor.
