@@ -26,6 +26,12 @@ if [ -d "${BUILD_DIR}/TimeSpend_TimeSpend.bundle" ]; then
     cp -R "${BUILD_DIR}/TimeSpend_TimeSpend.bundle" "${RESOURCES}/TimeSpend_TimeSpend.bundle"
 fi
 
+# Copy app icon
+ICON_SRC="Sources/TimeSpend/Resources/AppIcon.icns"
+if [ -f "${ICON_SRC}" ]; then
+    cp "${ICON_SRC}" "${RESOURCES}/AppIcon.icns"
+fi
+
 # Create Info.plist
 cat > "${CONTENTS}/Info.plist" << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -54,6 +60,8 @@ cat > "${CONTENTS}/Info.plist" << 'PLIST'
     <string>13.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright 2026. MIT License.</string>
 </dict>

@@ -27,6 +27,9 @@ jobs:
           # Copy SPM resource bundle
           cp -R .build/release/TimeSpend_TimeSpend.bundle "$APP/Contents/Resources/"
 
+          # Generate and copy app icon
+          swift scripts/generate-icon.swift "$APP/Contents/Resources/AppIcon.icns"
+
           # Write Info.plist
           cat > "$APP/Contents/Info.plist" << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -51,6 +54,8 @@ jobs:
             <string>13.0</string>
             <key>LSUIElement</key>
             <true/>
+            <key>CFBundleIconFile</key>
+            <string>AppIcon</string>
             <key>NSUserNotificationAlertStyle</key>
             <string>alert</string>
           </dict>
