@@ -206,7 +206,7 @@ final class ShareCardRenderer {
           <div class="stats">\(prompts) prompts &bull; avg \(avgText)/wait &bull; longest: \(longestText)</div>
           <div class="grass">\(grassEquivalent)</div>
           <div class="date">\(dateRange)</div>
-          <div class="watermark">claude-is-thinking.vercel.app</div>
+          <div class="watermark">claudeisthinking.com</div>
         </div>
         </body></html>
         """
