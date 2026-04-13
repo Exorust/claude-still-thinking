@@ -91,7 +91,7 @@ final class HookInstaller {
     private func writeHookScript() throws {
         let script = """
         #!/bin/bash
-        # Claude is Thinking? hook script - writes events to JSONL for tracking Claude Code wait time
+        # Claude Still Thinking? hook script - writes events to JSONL for tracking Claude Code wait time
         # Called by Claude Code hooks. Arg 1: event type (prompt_start | response_end)
 
         EVENTS_DIR="$HOME/.timespend"

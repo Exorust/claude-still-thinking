@@ -1,4 +1,4 @@
-# Claude is Thinking?: Vision
+# Claude Still Thinking?: Vision
 
 ## The Problem
 
@@ -18,7 +18,7 @@ Three things make this worth building:
 
 ## How It Works
 
-Claude is Thinking? is a macOS menu bar app. It installs a hook into Claude Code that fires events when you submit a prompt and when Claude finishes responding. The app watches those events, tracks the time, and shows you the data.
+Claude Still Thinking? is a macOS menu bar app. It installs a hook into Claude Code that fires events when you submit a prompt and when Claude finishes responding. The app watches those events, tracks the time, and shows you the data.
 
 No process monitoring. No accessibility permissions. No heuristics. Just hooks and timestamps. 100% accurate.
 

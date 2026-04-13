@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Claude is Thinking?")
+            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Claude Still Thinking?")
             button.image?.size = NSSize(width: 16, height: 16)
             button.action = #selector(togglePopover)
             button.target = self
@@ -195,7 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
             button.image = nil
         } else {
             button.title = ""
-            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Claude is Thinking?")
+            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Claude Still Thinking?")
             button.image?.size = NSSize(width: 16, height: 16)
         }
     }
@@ -358,7 +358,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Claude is Thinking? Settings"
+        window.title = "Claude Still Thinking? Settings"
         window.contentView = wv
         window.center()
         window.isReleasedWhenClosed = false

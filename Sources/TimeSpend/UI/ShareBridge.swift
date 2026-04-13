@@ -125,7 +125,7 @@ final class ShareBridge: NSObject, WKScriptMessageHandler {
         guard let pngData = pngData(from: image) else { return }
 
         let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let filename = "claude-is-thinking-\(period).png"
+        let filename = "claude-still-thinking-\(period).png"
         let url = downloads.appendingPathComponent(filename)
         try? pngData.write(to: url)
     }
@@ -186,7 +186,7 @@ final class ShareBridge: NSObject, WKScriptMessageHandler {
         shareCardRenderer?.renderCard(data: data, period: period, accentColor: currentAccentColor(), appearance: currentAppearance()) { image in
             guard let image = image else { return }
 
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("claude-is-thinking-card.png")
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("claude-still-thinking-card.png")
             if let tiffData = image.tiffRepresentation,
                let bitmapRep = NSBitmapImageRep(data: tiffData),
                let pngData = bitmapRep.representation(using: .png, properties: [:]) {
@@ -215,7 +215,7 @@ final class ShareBridge: NSObject, WKScriptMessageHandler {
             DispatchQueue.main.async {
                 let savePanel = NSSavePanel()
                 savePanel.allowedContentTypes = [.png]
-                savePanel.nameFieldStringValue = "claude-is-thinking-\(period).png"
+                savePanel.nameFieldStringValue = "claude-still-thinking-\(period).png"
                 savePanel.title = "Save Share Card"
 
                 if savePanel.runModal() == .OK, let url = savePanel.url {

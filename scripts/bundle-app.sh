@@ -3,7 +3,7 @@
 set -e
 
 APP_NAME="TimeSpend"
-DISPLAY_NAME="Claude is Thinking?"
+DISPLAY_NAME="Claude Still Thinking?"
 BUNDLE_ID="dev.timespend.app"
 BUILD_DIR=".build/debug"
 APP_DIR="build/${DISPLAY_NAME}.app"
@@ -47,9 +47,9 @@ cat > "${CONTENTS}/Info.plist" << 'PLIST'
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Claude is Thinking?</string>
+    <string>Claude Still Thinking?</string>
     <key>CFBundleDisplayName</key>
-    <string>Claude is Thinking?</string>
+    <string>Claude Still Thinking?</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

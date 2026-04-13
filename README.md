@@ -1,6 +1,6 @@
 <div align="center">
 
-# Claude is Thinking?
+# Claude Still Thinking?
 
 **You know that feeling.** You hit enter on a prompt, Claude starts "thinking,"<br>and suddenly you're reorganizing your desk drawer, making coffee, and wondering<br>if the AI is writing a novel in there.
 
@@ -31,7 +31,7 @@ A macOS menu bar app that tracks how long you spend waiting for Claude Code to r
 
 ```bash
 brew tap Exorust/tap
-brew install --cask claude-is-thinking
+brew install --cask claude-still-thinking
 ```
 
 ### Download
@@ -43,16 +43,16 @@ Grab the latest `.dmg` from [Releases](../../releases). Open it. Drag to Applica
 Requires Swift 5.9+ and macOS 13+. For people who enjoy waiting for builds while tracking how long they wait for AI.
 
 ```bash
-git clone https://github.com/Exorust/claude-is-thinking.git
-cd claude-is-thinking/TimeSpend
+git clone https://github.com/Exorust/claude-still-thinking.git
+cd claude-still-thinking/TimeSpend
 swift build
 ./scripts/bundle-app.sh
-open "build/Claude is Thinking?.app"
+open "build/Claude Still Thinking?.app"
 ```
 
 ## How It Works
 
-Claude is Thinking? uses [Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) — no process monitoring, no accessibility permissions, no heuristics, no vibes.
+Claude Still Thinking? uses [Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) — no process monitoring, no accessibility permissions, no heuristics, no vibes.
 
 On first launch, click **Enable Tracking** to install two hooks into `~/.claude/settings.json`:
 
