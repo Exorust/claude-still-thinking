@@ -27,34 +27,23 @@ A macOS menu bar app that tracks how long you spend waiting for Claude Code to r
 
 ## Install
 
-### Homebrew
+One command. Builds from source, copies to Applications, no Gatekeeper drama.
 
+```bash
+git clone https://github.com/Exorust/claude-still-thinking.git && cd claude-still-thinking/TimeSpend && ./scripts/install.sh
+```
+
+Requires Swift 5.9+ and macOS 13+. Takes about a minute.
+
+### Other options
+
+**Homebrew:**
 ```bash
 brew tap Exorust/tap
 brew install --cask claude-still-thinking
 ```
 
-### Download
-
-Grab the latest `.dmg` from [Releases](../../releases). Open it. Drag to Applications.
-
-> **Note:** The app isn't code-signed yet. If macOS says it's "damaged," run:
-> ```bash
-> xattr -cr "/Applications/Claude Still Thinking?.app"
-> ```
-> Or right-click the app → Open → click "Open" in the dialog.
-
-### Build from source
-
-Requires Swift 5.9+ and macOS 13+. For people who enjoy waiting for builds while tracking how long they wait for AI.
-
-```bash
-git clone https://github.com/Exorust/claude-still-thinking.git
-cd claude-still-thinking/TimeSpend
-swift build
-./scripts/bundle-app.sh
-open "build/Claude Still Thinking?.app"
-```
+**DMG:** Grab the latest `.dmg` from [Releases](../../releases). If macOS says it's "damaged," right-click → Open → click "Open", or run `xattr -cr "/Applications/Claude Still Thinking?.app"`.
 
 ## How It Works
 
